@@ -1,0 +1,50 @@
+{
+  "name": "ts-lsp-mcp",
+  "version": "0.1.0",
+  "description": "MCP server exposing TypeScript LSP-like functionality to AI agents",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "bin": {
+    "ts-lsp-mcp": "dist/bin/ts-lsp-mcp.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "test": "vitest",
+    "lint": "tsc --noEmit",
+    "prepublishOnly": "npm run build"
+  },
+  "keywords": [
+    "typescript",
+    "lsp",
+    "mcp",
+    "model-context-protocol",
+    "ai",
+    "type-checking"
+  ],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "commander": "^12.1.0",
+    "glob": "^10.4.5",
+    "ts-morph": "^24.0.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.17.10",
+    "tsup": "^8.3.5",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  },
+  "peerDependencies": {
+    "typescript": ">=4.7"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}
