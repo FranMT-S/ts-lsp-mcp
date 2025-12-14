@@ -129,8 +129,13 @@ export function normalizeTypeString(typeStr: string): string {
     .replace(/\s+/g, ' ')
     .replace(/\s*;\s*/g, '; ')
     .replace(/\s*,\s*/g, ', ')
+    .replace(/\s*:\s*/g, ': ')
     .replace(/\s*\|\s*/g, ' | ')
     .replace(/\s*&\s*/g, ' & ')
+    .replace(/\{(\S)/g, '{ $1')  // {a → { a
+    .replace(/(\S)\}/g, '$1 }')  // a} → a }
+    .replace(/\{\s+/g, '{ ')     // {   a → { a
+    .replace(/\s+\}/g, ' }')     // a   } → a }
     .trim();
 }
 

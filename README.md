@@ -4,23 +4,46 @@ MCP server exposing TypeScript LSP-like functionality to AI agents.
 
 Gives AI agents the same "what's the type at this position?" powers that IDE users have.
 
-## Installation
+## Quick Start
+
+### Install into Claude Code
+
+```bash
+# Install to current project (recommended)
+npx ts-lsp-mcp install cc
+
+# Or install globally for all projects
+npx ts-lsp-mcp install cc --global
+```
+
+That's it! The MCP server is now available to Claude Code.
+
+### Uninstall
+
+```bash
+npx ts-lsp-mcp uninstall cc
+```
+
+## Manual Installation
+
+### Global npm install
 
 ```bash
 npm install -g ts-lsp-mcp
+ts-lsp-mcp install cc
 ```
 
-## Usage
+### Manual config
 
-### With Claude Code (stdio)
-
-Add to your Claude Code MCP config (`~/.claude/claude_desktop_config.json`):
+Add to your Claude Code MCP config (`.mcp.json` in project or `~/.claude/settings.json` globally):
 
 ```json
 {
   "mcpServers": {
-    "typescript": {
-      "command": "ts-lsp-mcp"
+    "ts-lsp-mcp": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "ts-lsp-mcp", "serve", "--stdio"]
     }
   }
 }
@@ -77,6 +100,20 @@ runTypeTests({ pattern: "**/*.type-test.ts" })
 ## Example Usage
 
 ### Get type at position
+
+Supports unified `file:line:col` format:
+
+```json
+{
+  "tool": "getTypeAtPosition",
+  "arguments": {
+    "file": "src/user.ts:10:5"
+  }
+}
+```
+
+Or separate parameters:
+
 ```json
 {
   "tool": "getTypeAtPosition",
@@ -145,14 +182,22 @@ Response:
 ts-lsp-mcp [command] [options]
 
 Commands:
-  serve (default)    Start the MCP server
+  serve              Start the MCP server (default)
+  install <target>   Install into an AI assistant (cc, claude-code, claude)
+  uninstall <target> Uninstall from an AI assistant
 
-Options:
+Serve options:
   --stdio           Use stdio transport (default)
   --http            Use HTTP/SSE transport
   --port <port>     HTTP server port (default: 3000)
   --host <host>     HTTP server host (default: 127.0.0.1)
   --debug           Enable debug logging
+
+Install options:
+  --global          Install globally (user scope) instead of project
+  --name <name>     Custom name for the MCP server (default: ts-lsp-mcp)
+
+General:
   -V, --version     Output version number
   -h, --help        Display help
 ```

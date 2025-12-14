@@ -4,7 +4,7 @@ import ts from 'typescript';
 import * as path from 'node:path';
 import { getProjectManager } from '../../typescript/project-manager.js';
 import { positionToOffset } from '../../typescript/position-utils.js';
-import type { Position } from '../../typescript/position-utils.js';
+import { parseFileArgs } from '../../typescript/file-position-parser.js';
 
 /**
  * Traced type information showing composition and origin.
@@ -53,9 +53,9 @@ type TypeKind =
   | 'unknown';
 
 const FilePositionInput = {
-  file: z.string().describe('File path (absolute, relative, or unique filename)'),
-  line: z.number().int().positive().describe('Line number (1-indexed)'),
-  col: z.number().int().positive().describe('Column number (1-indexed)'),
+  file: z.string().describe('File path with optional :line:col suffix (e.g., "src/user.ts:10:5")'),
+  line: z.number().int().positive().optional().describe('Line number (1-indexed), overrides :line in file'),
+  col: z.number().int().positive().optional().describe('Column number (1-indexed), overrides :col in file'),
   projectRoot: z.string().optional().describe('Project root directory'),
   content: z.string().optional().describe('File content for virtual/unsaved files'),
 };
@@ -80,19 +80,26 @@ export function registerTraceType(server: McpServer): void {
     },
     async (params) => {
       try {
+        // Parse file:line:col format
+        const { file, position } = parseFileArgs({
+          file: params.file,
+          line: params.line,
+          col: params.col,
+        });
+
         const pm = getProjectManager();
-        const lookupPath = params.projectRoot ?? params.file;
+        const lookupPath = params.projectRoot ?? file;
         const project = await pm.getProject(lookupPath);
 
         // Handle virtual file
         let resolvedFile: string;
         if (params.content !== undefined) {
-          resolvedFile = path.isAbsolute(params.file)
-            ? params.file
-            : path.join(project.projectRoot, params.file);
+          resolvedFile = path.isAbsolute(file)
+            ? file
+            : path.join(project.projectRoot, file);
           project.languageService.setVirtualFile(resolvedFile, params.content);
         } else {
-          resolvedFile = await project.fileResolver.resolve(params.file);
+          resolvedFile = await project.fileResolver.resolve(file);
         }
 
         const ls = project.languageService;
@@ -101,14 +108,13 @@ export function registerTraceType(server: McpServer): void {
           return errorResponse(`File not found: ${params.file}`);
         }
 
-        const position: Position = { line: params.line, col: params.col };
         const offset = positionToOffset(sourceFile, position);
 
         // Get type at position
         const typeInfo = ls.getTypeAtPosition(resolvedFile, offset);
         if (!typeInfo) {
           return errorResponse(
-            `No type information at ${params.file}:${params.line}:${params.col}`
+            `No type information at ${params.file}:${position.line}:${position.col}`
           );
         }
 

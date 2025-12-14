@@ -3,6 +3,14 @@
   "version": "0.1.0",
   "description": "MCP server exposing TypeScript LSP-like functionality to AI agents",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jaenster/ts-lsp-mcp.git"
+  },
+  "homepage": "https://github.com/jaenster/ts-lsp-mcp#readme",
+  "bugs": {
+    "url": "https://github.com/jaenster/ts-lsp-mcp/issues"
+  },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "bin": {
@@ -14,7 +22,8 @@
   "scripts": {
     "build": "tsup",
     "dev": "tsup --watch",
-    "test": "vitest",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "test:watch": "node --import tsx --test --watch tests/*.test.ts",
     "lint": "tsc --noEmit",
     "prepublishOnly": "npm run build"
   },
@@ -38,8 +47,8 @@
   "devDependencies": {
     "@types/node": "^20.17.10",
     "tsup": "^8.3.5",
-    "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.2"
   },
   "peerDependencies": {
     "typescript": ">=4.7"

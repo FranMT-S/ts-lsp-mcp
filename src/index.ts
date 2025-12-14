@@ -20,6 +20,12 @@ export {
 } from './typescript/position-utils.js';
 export type { Position, Range } from './typescript/position-utils.js';
 export {
+  parseFileLocation,
+  parseFileArgs,
+  resolvePosition,
+} from './typescript/file-position-parser.js';
+export type { FileLocation } from './typescript/file-position-parser.js';
+export {
   serializeType,
   getSymbolKind,
   formatDiagnostic,

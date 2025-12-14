@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { getProjectManager, disposeProjectManager } from '../typescript/project-manager.js';
 import { positionToOffset, offsetToPosition, getLinePreview } from '../typescript/position-utils.js';
 import { serializeType, getSymbolKind, formatDiagnostic } from '../typescript/type-serializer.js';
+import { parseFileArgs } from '../typescript/file-position-parser.js';
 import { logger } from '../utils/logger.js';
 import type { Position } from '../typescript/position-utils.js';
 import { registerTraceType } from './tools/trace-type.js';
@@ -33,32 +34,43 @@ export function createMcpServer(): McpServer {
 }
 
 // Common input schemas
+// Supports unified format: "file.ts:10:5" or explicit line/col params
 const FilePositionInput = {
-  file: z.string().describe('File path (absolute, relative, or unique filename)'),
-  line: z.number().int().positive().describe('Line number (1-indexed)'),
-  col: z.number().int().positive().describe('Column number (1-indexed)'),
+  file: z.string().describe('File path with optional :line:col suffix (e.g., "src/user.ts:10:5")'),
+  line: z.number().int().positive().optional().describe('Line number (1-indexed), overrides :line in file'),
+  col: z.number().int().positive().optional().describe('Column number (1-indexed), overrides :col in file'),
   projectRoot: z.string().optional().describe('Project root directory (auto-detected if omitted)'),
   content: z.string().optional().describe('File content for virtual/unsaved files'),
 };
 
 /**
- * Helper to get project and resolve file.
+ * Helper to get project and resolve file with position.
+ * Supports unified format: "file.ts:10:5" or explicit line/col params.
  */
 async function resolveFileInProject(params: {
   file: string;
+  line?: number;
+  col?: number;
   projectRoot?: string;
   content?: string;
 }) {
+  // Parse file:line:col format
+  const { file, position } = parseFileArgs({
+    file: params.file,
+    line: params.line,
+    col: params.col,
+  });
+
   const pm = getProjectManager();
 
   // Get project (use file or projectRoot to find tsconfig)
-  const lookupPath = params.projectRoot ?? params.file;
+  const lookupPath = params.projectRoot ?? file;
   const project = await pm.getProject(lookupPath);
 
   // Resolve file (handles virtual files)
-  const resolvedFile = await pm.resolveFile(project, params.file, params.content);
+  const resolvedFile = await pm.resolveFile(project, file, params.content);
 
-  return { project, resolvedFile };
+  return { project, resolvedFile, position };
 }
 
 // ============================================================================
@@ -82,7 +94,7 @@ function registerGetTypeAtPosition(server: McpServer): void {
     },
     async (params) => {
       try {
-        const { project, resolvedFile } = await resolveFileInProject(params);
+        const { project, resolvedFile, position } = await resolveFileInProject(params);
         const ls = project.languageService;
 
         // Get source file
@@ -92,13 +104,12 @@ function registerGetTypeAtPosition(server: McpServer): void {
         }
 
         // Convert position to offset
-        const position: Position = { line: params.line, col: params.col };
         const offset = positionToOffset(sourceFile, position);
 
         // Get type info
         const typeInfo = ls.getTypeAtPosition(resolvedFile, offset);
         if (!typeInfo) {
-          return errorResponse(`No type information at ${params.file}:${params.line}:${params.col}`);
+          return errorResponse(`No type information at ${params.file}:${position.line}:${position.col}`);
         }
 
         const typeChecker = ls.getTypeChecker();
@@ -135,7 +146,7 @@ function registerGetDefinition(server: McpServer): void {
     FilePositionInput,
     async (params) => {
       try {
-        const { project, resolvedFile } = await resolveFileInProject(params);
+        const { project, resolvedFile, position } = await resolveFileInProject(params);
         const ls = project.languageService;
 
         const sourceFile = ls.getSourceFile(resolvedFile);
@@ -143,12 +154,11 @@ function registerGetDefinition(server: McpServer): void {
           return errorResponse(`File not found: ${params.file}`);
         }
 
-        const position: Position = { line: params.line, col: params.col };
         const offset = positionToOffset(sourceFile, position);
 
         const definitions = ls.getDefinitionAtPosition(resolvedFile, offset);
         if (!definitions || definitions.length === 0) {
-          return errorResponse(`No definition found at ${params.file}:${params.line}:${params.col}`);
+          return errorResponse(`No definition found at ${params.file}:${position.line}:${position.col}`);
         }
 
         const result = definitions.map((def) => {
@@ -192,7 +202,7 @@ function registerGetReferences(server: McpServer): void {
     },
     async (params) => {
       try {
-        const { project, resolvedFile } = await resolveFileInProject(params);
+        const { project, resolvedFile, position } = await resolveFileInProject(params);
         const ls = project.languageService;
 
         const sourceFile = ls.getSourceFile(resolvedFile);
@@ -200,12 +210,11 @@ function registerGetReferences(server: McpServer): void {
           return errorResponse(`File not found: ${params.file}`);
         }
 
-        const position: Position = { line: params.line, col: params.col };
         const offset = positionToOffset(sourceFile, position);
 
         let references = ls.getReferencesAtPosition(resolvedFile, offset);
         if (!references || references.length === 0) {
-          return errorResponse(`No references found at ${params.file}:${params.line}:${params.col}`);
+          return errorResponse(`No references found at ${params.file}:${position.line}:${position.col}`);
         }
 
         // Filter node_modules if requested
@@ -256,7 +265,7 @@ function registerGetHover(server: McpServer): void {
     FilePositionInput,
     async (params) => {
       try {
-        const { project, resolvedFile } = await resolveFileInProject(params);
+        const { project, resolvedFile, position } = await resolveFileInProject(params);
         const ls = project.languageService;
 
         const sourceFile = ls.getSourceFile(resolvedFile);
@@ -264,12 +273,11 @@ function registerGetHover(server: McpServer): void {
           return errorResponse(`File not found: ${params.file}`);
         }
 
-        const position: Position = { line: params.line, col: params.col };
         const offset = positionToOffset(sourceFile, position);
 
         const quickInfo = ls.getQuickInfoAtPosition(resolvedFile, offset);
         if (!quickInfo) {
-          return errorResponse(`No hover information at ${params.file}:${params.line}:${params.col}`);
+          return errorResponse(`No hover information at ${params.file}:${position.line}:${position.col}`);
         }
 
         const displayParts = quickInfo.displayParts?.map((p) => p.text).join('') ?? '';
@@ -308,7 +316,7 @@ function registerGetCompletions(server: McpServer): void {
     },
     async (params) => {
       try {
-        const { project, resolvedFile } = await resolveFileInProject(params);
+        const { project, resolvedFile, position } = await resolveFileInProject(params);
         const ls = project.languageService;
 
         const sourceFile = ls.getSourceFile(resolvedFile);
@@ -316,7 +324,6 @@ function registerGetCompletions(server: McpServer): void {
           return errorResponse(`File not found: ${params.file}`);
         }
 
-        const position: Position = { line: params.line, col: params.col };
         const offset = positionToOffset(sourceFile, position);
 
         const completions = ls.getCompletionsAtPosition(resolvedFile, offset);

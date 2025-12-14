@@ -49,7 +49,12 @@ export async function runTypeTests(
   let files: string[];
 
   if (options.file) {
-    files = [await project.fileResolver.resolve(options.file)];
+    // Check if it's a virtual file first
+    if (ls.isVirtualFile(options.file)) {
+      files = [ls.resolveFileName(options.file)];
+    } else {
+      files = [await project.fileResolver.resolve(options.file)];
+    }
   } else if (options.pattern) {
     files = await glob(options.pattern, {
       cwd: project.projectRoot,

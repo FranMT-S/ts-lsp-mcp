@@ -73,17 +73,15 @@ export function registerCheckInlineCode(server: McpServer): void {
           }
         }
 
-        // Create a virtual source file
-        const sourceFile = ts.createSourceFile(
-          params.fileName,
-          params.code,
-          compilerOptions.target ?? ts.ScriptTarget.ES2022,
-          true
-        );
-
         // Create a minimal program for type-checking
         const host = createInlineHost(params.code, params.fileName, compilerOptions);
         const program = ts.createProgram([params.fileName], compilerOptions, host);
+
+        // Get the source file from the program (not separately created)
+        const sourceFile = program.getSourceFile(params.fileName);
+        if (!sourceFile) {
+          return errorResponse('Failed to create source file');
+        }
 
         // Get diagnostics
         const syntacticDiagnostics = program.getSyntacticDiagnostics(sourceFile);
