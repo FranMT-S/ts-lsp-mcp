@@ -1,5 +1,9 @@
 # ts-lsp-mcp
 
+[![npm version](https://img.shields.io/npm/v/ts-lsp-mcp.svg)](https://www.npmjs.com/package/ts-lsp-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/ts-lsp-mcp.svg)](https://www.npmjs.com/package/ts-lsp-mcp)
+[![license](https://img.shields.io/npm/l/ts-lsp-mcp.svg)](https://github.com/jaenster/ts-lsp-mcp/blob/main/LICENSE)
+
 MCP server exposing TypeScript LSP-like functionality to AI agents.
 
 Gives AI agents the same "what's the type at this position?" powers that IDE users have.
