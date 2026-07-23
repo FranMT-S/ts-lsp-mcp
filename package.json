@@ -1,15 +1,19 @@
 {
-  "name": "ts-lsp-mcp",
+  "name": "@franmt-s/ts-lsp-mcp",
   "version": "0.1.3",
   "description": "MCP server exposing TypeScript LSP-like functionality to AI agents",
   "type": "module",
+  "author": "FranMT-S",
+  "contributors": [
+    "jaenster <github@jaenster.net>"
+  ],
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/jaenster/ts-lsp-mcp.git"
+    "url": "git+https://github.com/FranMT-S/ts-lsp-mcp.git"
   },
-  "homepage": "https://github.com/jaenster/ts-lsp-mcp#readme",
+  "homepage": "https://github.com/FranMT-S/ts-lsp-mcp#readme",
   "bugs": {
-    "url": "https://github.com/jaenster/ts-lsp-mcp/issues"
+    "url": "https://github.com/FranMT-S/ts-lsp-mcp/issues"
   },
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -20,6 +24,7 @@
     "dist"
   ],
   "scripts": {
+    "release": "npm run build && npm test && npm publish --access public",
     "prepare": "npm run build",
     "build": "tsup",
     "dev": "tsup --watch",
@@ -36,7 +41,6 @@
     "ai",
     "type-checking"
   ],
-  "author": "",
   "license": "MIT",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",

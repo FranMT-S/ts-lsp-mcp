@@ -209,3 +209,7 @@ General:
 ## License
 
 MIT
+
+## Credits
+
+This package is a maintained fork of [ts-lsp-mcp](https://github.com/jaenster/ts-lsp-mcp) created by [jaenster](https://github.com/jaenster).
