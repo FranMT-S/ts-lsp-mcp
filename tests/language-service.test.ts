@@ -144,7 +144,7 @@ describe('FileResolver', () => {
     const project = await pm.getProject(fixtureDir);
 
     const resolved = await project.fileResolver.resolve(testFile);
-    assert.strictEqual(resolved, testFile);
+    assert.strictEqual(resolved, testFile.replace(/\\/g, '/'));
   });
 
   it('should resolve relative paths', async () => {
@@ -152,7 +152,7 @@ describe('FileResolver', () => {
     const project = await pm.getProject(fixtureDir);
 
     const resolved = await project.fileResolver.resolve('src/index.ts');
-    assert.ok(resolved.endsWith('src/index.ts'));
+    assert.ok(resolved.replace(/\\/g, '/').endsWith('src/index.ts'));
   });
 
   it('should resolve unique filenames', async () => {
@@ -160,7 +160,7 @@ describe('FileResolver', () => {
     const project = await pm.getProject(fixtureDir);
 
     const resolved = await project.fileResolver.resolve('index.ts');
-    assert.ok(resolved.endsWith('index.ts'));
+    assert.ok(resolved.replace(/\\/g, '/').endsWith('index.ts'));
   });
 
   it('should throw on ambiguous filenames', async () => {
