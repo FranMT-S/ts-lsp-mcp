@@ -2,7 +2,7 @@ import { describe, it, before, after } from 'node:test';
 import assert from 'node:assert';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import ts from 'typescript';
+import { ts } from '../src/typescript/ts-import.js';
 
 import { getProjectManager, disposeProjectManager } from '../src/typescript/project-manager.js';
 import {

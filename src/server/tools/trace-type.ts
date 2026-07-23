@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import ts from 'typescript';
+import * as ts from 'typescript';
 import * as path from 'node:path';
 import { getProjectManager } from '../../typescript/project-manager.js';
 import { positionToOffset } from '../../typescript/position-utils.js';

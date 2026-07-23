@@ -6,7 +6,7 @@ import { positionToOffset } from '../src/typescript/position-utils.js';
 import { runTypeTests } from '../src/type-tests/runner.js';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import ts from 'typescript';
+import { ts } from '../src/typescript/ts-import.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 

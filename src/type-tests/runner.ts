@@ -1,4 +1,4 @@
-import ts from 'typescript';
+import * as ts from 'typescript';
 import { glob } from 'glob';
 import * as path from 'node:path';
 import type { ProjectContext } from '../typescript/project-manager.js';

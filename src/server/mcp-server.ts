@@ -4,6 +4,7 @@ import { getProjectManager, disposeProjectManager } from '../typescript/project-
 import { positionToOffset, offsetToPosition, getLinePreview } from '../typescript/position-utils.js';
 import { serializeType, getSymbolKind, formatDiagnostic } from '../typescript/type-serializer.js';
 import { parseFileArgs } from '../typescript/file-position-parser.js';
+import * as ts from 'typescript';
 import { logger } from '../utils/logger.js';
 import type { Position } from '../typescript/position-utils.js';
 import { registerTraceType } from './tools/trace-type.js';
@@ -280,12 +281,12 @@ function registerGetHover(server: McpServer): void {
           return errorResponse(`No hover information at ${params.file}:${position.line}:${position.col}`);
         }
 
-        const displayParts = quickInfo.displayParts?.map((p) => p.text).join('') ?? '';
-        const documentation = quickInfo.documentation?.map((d) => d.text).join('\n') ?? '';
+        const displayParts = quickInfo.displayParts?.map((p: ts.SymbolDisplayPart) => p.text).join('') ?? '';
+        const documentation = quickInfo.documentation?.map((d: ts.SymbolDisplayPart) => d.text).join('\n') ?? '';
 
-        const tags = quickInfo.tags?.map((tag) => ({
+        const tags = quickInfo.tags?.map((tag: ts.JSDocTagInfo) => ({
           name: tag.name,
-          text: tag.text?.map((t) => t.text).join('') ?? '',
+          text: tag.text?.map((t: ts.SymbolDisplayPart) => t.text).join('') ?? '',
         }));
 
         return successResponse({
@@ -336,13 +337,13 @@ function registerGetCompletions(server: McpServer): void {
         // Filter by prefix if provided
         if (params.prefix) {
           const prefix = params.prefix.toLowerCase();
-          entries = entries.filter((e) => e.name.toLowerCase().startsWith(prefix));
+          entries = entries.filter((e: ts.CompletionEntry) => e.name.toLowerCase().startsWith(prefix));
         }
 
         const totalCount = entries.length;
         const isIncomplete = totalCount > params.maxResults;
 
-        const result = entries.slice(0, params.maxResults).map((entry) => ({
+        const result = entries.slice(0, params.maxResults).map((entry: ts.CompletionEntry) => ({
           name: entry.name,
           kind: entry.kind,
           sortText: entry.sortText,
