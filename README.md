@@ -1,70 +1,133 @@
-# ts-lsp-mcp
+# @franmt-s/ts-lsp-mcp
 
-[![npm version](https://img.shields.io/npm/v/ts-lsp-mcp.svg)](https://www.npmjs.com/package/ts-lsp-mcp)
-[![npm downloads](https://img.shields.io/npm/dm/ts-lsp-mcp.svg)](https://www.npmjs.com/package/ts-lsp-mcp)
-[![license](https://img.shields.io/npm/l/ts-lsp-mcp.svg)](https://github.com/jaenster/ts-lsp-mcp/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/@franmt-s/ts-lsp-mcp.svg)](https://www.npmjs.com/package/@franmt-s/ts-lsp-mcp)
+[![npm downloads](https://img.shields.io/npm/dm/@franmt-s/ts-lsp-mcp.svg)](https://www.npmjs.com/package/@franmt-s/ts-lsp-mcp)
+[![license](https://img.shields.io/npm/l/@franmt-s/ts-lsp-mcp.svg)](https://github.com/FranMT-S/ts-lsp-mcp/blob/main/LICENSE)
 
 MCP server exposing TypeScript LSP-like functionality to AI agents.
 
 Gives AI agents the same "what's the type at this position?" powers that IDE users have.
 
+---
+
 ## Quick Start
 
-### Install into Claude Code
+### Install into Claude Code or AI Assistants
 
 ```bash
 # Install to current project (recommended)
-npx ts-lsp-mcp install cc
+npx @franmt-s/ts-lsp-mcp install cc
 
 # Or install globally for all projects
-npx ts-lsp-mcp install cc --global
+npx @franmt-s/ts-lsp-mcp install cc --global
 ```
 
-That's it! The MCP server is now available to Claude Code.
+That's it! The MCP server is now available to your AI Assistant.
 
 ### Uninstall
 
 ```bash
-npx ts-lsp-mcp uninstall cc
+npx @franmt-s/ts-lsp-mcp uninstall cc
 ```
 
-## Manual Installation
+---
 
-### Global npm install
+## MCP Configuration Examples
 
-```bash
-npm install -g ts-lsp-mcp
-ts-lsp-mcp install cc
-```
+Add `@franmt-s/ts-lsp-mcp` to your MCP configuration file (`mcp_config.json`, `.mcp.json`, `claude_desktop_config.json`, or settings UI in Antigravity IDE, Cursor, Windsurf, Roo Code, Cline, VS Code).
 
-### Manual config
-
-Add to your Claude Code MCP config (`.mcp.json` in project or `~/.claude/settings.json` globally):
+### A. Via NPX (npm registry)
 
 ```json
 {
   "mcpServers": {
     "ts-lsp-mcp": {
-      "type": "stdio",
       "command": "npx",
-      "args": ["-y", "ts-lsp-mcp", "serve", "--stdio"]
+      "args": [
+        "-y",
+        "@franmt-s/ts-lsp-mcp",
+        "serve",
+        "--stdio"
+      ]
     }
   }
 }
 ```
 
-### HTTP/SSE Mode
+### B. Directly from GitHub (Without npm)
 
-For remote clients or debugging:
-
-```bash
-ts-lsp-mcp --http --port 3000
+```json
+{
+  "mcpServers": {
+    "ts-lsp-mcp": {
+      "command": "npx",
+      "args": [
+        "-y",
+        "github:FranMT-S/ts-lsp-mcp",
+        "serve",
+        "--stdio"
+      ]
+    }
+  }
+}
 ```
 
-Endpoints:
-- `GET /sse` - SSE connection
-- `POST /message` - Send messages
+### C. Local Development / Testing (Local Relative Path)
+
+If you are developing or testing `ts-lsp-mcp` locally on your machine, point directly to your local built binary using a relative path:
+
+```json
+{
+  "mcpServers": {
+    "ts-lsp-mcp": {
+      "command": "node",
+      "args": [
+        "./dist/bin/ts-lsp-mcp.js",
+        "serve",
+        "--stdio"
+      ]
+    }
+  }
+}
+```
+
+---
+
+## Manual Installation & HTTP / SSE Mode
+
+### Global npm install
+
+```bash
+npm install -g @franmt-s/ts-lsp-mcp
+ts-lsp-mcp install cc
+```
+
+### HTTP / SSE Mode (Local Testing)
+
+For remote clients, web agents, or local debugging:
+
+```bash
+# Run local HTTP server on port 3000
+node dist/bin/ts-lsp-mcp.js serve --http --port 3000
+```
+
+Available SSE endpoints:
+- `GET /sse` - SSE connection endpoint
+- `POST /message` - Send MCP JSON-RPC messages
 - `GET /health` - Health check
+
+MCP SSE Configuration:
+```json
+{
+  "mcpServers": {
+    "ts-lsp-mcp": {
+      "url": "http://localhost:3000/sse"
+    }
+  }
+}
+```
+
+---
 
 ## Available Tools
 
@@ -80,9 +143,11 @@ Endpoints:
 | `runTypeTests` | Run type assertions from `@ts-lsp-mcp` comments |
 | `checkInlineCode` | Type-check inline TypeScript without creating files |
 
+---
+
 ## Type Test Assertions
 
-Add type assertions to your code:
+Add type assertions directly into your TypeScript code comments:
 
 ```typescript
 // @ts-lsp-mcp expect-type: string
@@ -92,18 +157,34 @@ const name = user.name;
 const user = createUser({ name: 'Alice' });
 
 // @ts-lsp-mcp expect-error: 2322
-const bad: number = "oops";  // Should have error 2322
+const bad: number = "oops";  // Should have error TS2322
 ```
 
-Run tests:
+Run assertions via MCP tool:
+```json
+{
+  "tool": "runTypeTests",
+  "arguments": {
+    "file": "src/types.ts"
+  }
+}
 ```
-runTypeTests({ file: "src/types.ts" })
-runTypeTests({ pattern: "**/*.type-test.ts" })
+
+Or via pattern:
+```json
+{
+  "tool": "runTypeTests",
+  "arguments": {
+    "pattern": "**/*.type-test.ts"
+  }
+}
 ```
+
+---
 
 ## Example Usage
 
-### Get type at position
+### 1. Get type at position
 
 Supports unified `file:line:col` format:
 
@@ -139,7 +220,8 @@ Response:
 }
 ```
 
-### Check for type errors
+### 2. Check for type errors (Diagnostics)
+
 ```json
 {
   "tool": "getDiagnostics",
@@ -149,7 +231,8 @@ Response:
 }
 ```
 
-### Type-check inline code
+### 3. Type-check inline code
+
 ```json
 {
   "tool": "checkInlineCode",
@@ -172,17 +255,22 @@ Response:
 }
 ```
 
+---
+
 ## Features
 
-- **Multi-project support**: Works with monorepos with multiple tsconfigs
-- **Auto-discovery**: Finds tsconfig.json automatically
-- **Smart file resolution**: Accepts absolute, relative, or unique filenames
-- **Virtual files**: Type-check unsaved code with the `content` parameter
-- **Efficient**: Long-lived daemon caches TypeScript projects
+- **Multi-client support**: Works with Antigravity IDE, Claude Code, Cursor, Windsurf, VS Code, Roo Code, Cline.
+- **Multi-project support**: Works with monorepos with multiple tsconfigs.
+- **Auto-discovery**: Finds `tsconfig.json` automatically starting from target files.
+- **Smart file resolution**: Accepts absolute, relative, or unique filenames.
+- **Virtual files**: Type-check unsaved code with the `content` parameter.
+- **Efficient**: Long-lived daemon caches TypeScript projects.
+
+---
 
 ## CLI Options
 
-```
+```text
 ts-lsp-mcp [command] [options]
 
 Commands:
@@ -206,10 +294,12 @@ General:
   -h, --help        Display help
 ```
 
+---
+
 ## License
 
-MIT
+MIT License - see [LICENSE](file:///d:/Red%20Sadness/Programming/Z%20-%20Proyectos/ts-lsp-mcp/LICENSE) for details.
 
-## Credits
+## Credits & Acknowledgments
 
-This package is a maintained fork of [ts-lsp-mcp](https://github.com/jaenster/ts-lsp-mcp) created by [jaenster](https://github.com/jaenster).
+This package is a maintained fork of [ts-lsp-mcp](https://github.com/jaenster/ts-lsp-mcp) created by [jaenster](https://github.com/jaenster). Special thanks to the original author for creating the foundation of this TypeScript MCP server.
