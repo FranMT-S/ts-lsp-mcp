@@ -43,7 +43,7 @@ export async function startHttpServer(
       logger.info('New SSE connection');
 
       const transport = new SSEServerTransport('/message', res);
-      const sessionId = generateSessionId();
+      const sessionId = transport.sessionId;
 
       transports.set(sessionId, transport);
 
@@ -59,10 +59,8 @@ export async function startHttpServer(
 
     // Message endpoint - client sends messages here
     if (url.pathname === '/message' && req.method === 'POST') {
-      // Find the transport for this session
-      // In a real implementation, you'd use session cookies or headers
-      // For simplicity, we'll use the most recent transport
-      const transport = Array.from(transports.values()).pop();
+      const sessionId = url.searchParams.get('sessionId');
+      const transport = (sessionId ? transports.get(sessionId) : undefined) ?? Array.from(transports.values()).pop();
 
       if (!transport) {
         res.writeHead(400, { 'Content-Type': 'application/json' });

@@ -199,10 +199,7 @@ export class LanguageServiceWrapper {
    * Resolve a file name to an absolute path.
    */
   resolveFileName(fileName: string): string {
-    if (path.isAbsolute(fileName)) {
-      return fileName;
-    }
-    return path.resolve(this.projectRoot, fileName);
+    return path.resolve(this.projectRoot, fileName).replace(/\\/g, '/');
   }
 
   /**
@@ -210,8 +207,14 @@ export class LanguageServiceWrapper {
    */
   getSourceFile(fileName: string): ts.SourceFile | undefined {
     const resolved = this.resolveFileName(fileName);
-    const program = this.languageService.getProgram();
-    return program?.getSourceFile(resolved);
+    const program = this.getProgram();
+    const sf = program.getSourceFile(resolved);
+    if (sf) return sf;
+
+    const normalized = resolved.replace(/\\/g, '/').toLowerCase();
+    return program.getSourceFiles().find(
+      (f) => f.fileName.replace(/\\/g, '/').toLowerCase() === normalized
+    );
   }
 
   /**

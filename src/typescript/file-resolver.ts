@@ -20,7 +20,7 @@ export class FileResolver {
     // 1. Try absolute path
     if (path.isAbsolute(input)) {
       if (fs.existsSync(input)) {
-        return input;
+        return path.resolve(input).replace(/\\/g, '/');
       }
       throw new Error(`File not found: ${input}`);
     }
@@ -28,7 +28,7 @@ export class FileResolver {
     // 2. Try relative to project root
     const relativePath = path.join(this.projectRoot, input);
     if (fs.existsSync(relativePath)) {
-      return path.resolve(relativePath);
+      return path.resolve(relativePath).replace(/\\/g, '/');
     }
 
     // 3. Glob search for unique filename
@@ -55,7 +55,7 @@ export class FileResolver {
     }
 
     if (matches.length === 1) {
-      return matches[0]!;
+      return path.resolve(matches[0]!).replace(/\\/g, '/');
     }
 
     // Ambiguous - list matches to help the user
