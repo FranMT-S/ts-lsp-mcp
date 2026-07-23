@@ -5,6 +5,7 @@ export default defineConfig([
   {
     entry: { index: 'src/index.ts' },
     format: ['esm'],
+    cjsInterop: true,
     dts: true,
     sourcemap: true,
     clean: true,
@@ -16,6 +17,7 @@ export default defineConfig([
   {
     entry: { 'bin/ts-lsp-mcp': 'bin/ts-lsp-mcp.ts' },
     format: ['esm'],
+    cjsInterop: true,
     dts: false,
     sourcemap: true,
     target: 'node18',
